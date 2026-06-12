@@ -1,0 +1,6 @@
+## Interface: 30300
+## Title: GatherTracker
+## Notes: Track session herbs, ores, and gold metrics.
+## SavedVariables: GatherTrackerDB, GatherTrackerPos, GatherTrackerWhitelist
+
+GatherTracker.lua
