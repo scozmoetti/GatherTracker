@@ -14,6 +14,8 @@ local rowLines = {}
 local sessionStartTime = nil
 local isSessionFrozen = false
 local frozenSessionDuration = 0
+local lastGPHUpdate = 0
+local cachedGPHText = "Gold per hour:  0.00g"
 
 -- Session tables
 local GatherTrackerSession = GatherTrackerSession or {}
@@ -215,10 +217,12 @@ local function CreateTrackingWindow()
         if sessionStartTime and isSessionFrozen then
             sessionStartTime = GetTime() - frozenSessionDuration
             isSessionFrozen = false frozenSessionDuration = 0
+            lastGPHUpdate = 0
             print("|cFF00FF00[GatherTracker] Session resumed!|r")
         elseif not sessionStartTime then
             sessionStartTime = GetTime()
             isSessionFrozen = false frozenSessionDuration = 0
+            lastGPHUpdate = 0
             print("|cFF00FF00[GatherTracker] Session started!|r")
         end
         if displayWindow then UpdateUIWindow() displayWindow:Show() end
@@ -279,9 +283,15 @@ function UpdateUIWindow()
     displayWindow.goldSummaryText:SetPoint("TOPLEFT", 10, verticalOffset - 6)
     displayWindow.goldSummaryText:SetText("Total:  " .. FormatMoneyString(totalSessionValue))
     
-    local masterVelocityRate = CalculateTotalGoldPerHour(totalSessionValue)
+    local now = GetTime()
+    if (now - lastGPHUpdate) >= 5 then
+        local masterVelocityRate = CalculateTotalGoldPerHour(totalSessionValue)
+        cachedGPHText = "Gold per hour:  " .. FormatMoneyString(masterVelocityRate)
+        lastGPHUpdate = now
+    end
+
     displayWindow.velocityText:SetPoint("TOPLEFT", 10, verticalOffset - 20)
-    displayWindow.velocityText:SetText("Gold per hour:  " .. FormatMoneyString(masterVelocityRate))
+    displayWindow.velocityText:SetText(cachedGPHText)
 
     if lineIndex > 1 then displayWindow:SetSize(240, math.abs(verticalOffset) + 45) else displayWindow:SetSize(240, 90) end
 end
@@ -505,6 +515,7 @@ SlashCmdList["GATHERTRACKER"] = function(msg)
         isSessionFrozen = false
         frozenSessionDuration = 0
         sessionStartTime = GetTime()
+        lastGPHUpdate = 0
 
         if displayWindow then
             UpdateUIWindow()
@@ -528,12 +539,14 @@ SlashCmdList["GATHERTRACKER"] = function(msg)
             sessionStartTime = GetTime() - frozenSessionDuration
             isSessionFrozen = false
             frozenSessionDuration = 0
+            lastGPHUpdate = 0
             if displayWindow then UpdateUIWindow() end
             print("|cFF00FF00[GatherTracker] Session resumed!|r")
         elseif not sessionStartTime then
             sessionStartTime = GetTime()
             isSessionFrozen = false
             frozenSessionDuration = 0
+            lastGPHUpdate = 0
             if displayWindow then UpdateUIWindow() displayWindow:Show() end
             print("|cFF00FF00[GatherTracker] Session started!|r")
         end
